@@ -1,0 +1,1458 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101513">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WDG Campo">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Work Drones Geo — Campo</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<!-- Supabase -->
+<script>
+  const SUPABASE_URL = 'https://eqyfyakkcpbegsfdssxh.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxeWZ5YWtrY3BiZWdzZmRzc3hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTMxMzcsImV4cCI6MjEwNjAyOTEzN30.9tEr6XAqk_NBZsXtTVR3jc_I_Io4naALXM_ZHL6Pgg0';
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+/* ── DESIGN SYSTEM ─────────────────────────────────────────── */
+:root {
+  --bg:         #0D1512;
+  --surface:    #162118;
+  --surface2:   #1E2E24;
+  --accent:     #16c96b;
+  --accent-dim: #0e8f4a;
+  --text:       #E8F5EC;
+  --text-muted: #7A9882;
+  --border:     #243629;
+  --warn:       #F59E0B;
+  --danger:     #EF4444;
+  --ok:         #22C55E;
+  --radius:     16px;
+  --radius-sm:  10px;
+  --nav-h:      72px;
+  --top-h:      60px;
+  --safe-top:   env(safe-area-inset-top, 0px);
+  --safe-bot:   env(safe-area-inset-bottom, 0px);
+  --safe-l:     env(safe-area-inset-left, 0px);
+  --safe-r:     env(safe-area-inset-right, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+input, select, textarea, button { font-family: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+a { color: inherit; text-decoration: none; }
+.hidden { display: none !important; }
+
+/* ── SCROLLABLE CONTENT ────────────────────────────────────── */
+.scroll-area {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── SPINNER ───────────────────────────────────────────────── */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+}
+.splash-logo { font-size: 48px; font-weight: 900; letter-spacing: -2px; }
+.splash-logo span { color: var(--accent); }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── LOGIN ─────────────────────────────────────────────────── */
+#login {
+  position: fixed; inset: 0; z-index: 500;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: calc(var(--safe-top) + 24px) calc(var(--safe-l) + 20px) calc(var(--safe-bot) + 24px) calc(var(--safe-r) + 20px);
+}
+.login-card {
+  width: 100%; max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 32px 24px;
+}
+.brand { font-weight: 900; font-size: 22px; letter-spacing: -1px; margin-bottom: 4px; }
+.brand b { color: var(--accent); }
+.brand-sub { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.login-title { font-size: 24px; font-weight: 800; margin: 28px 0 6px; }
+.login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color .2s;
+  -webkit-appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--accent);
+}
+.field textarea { min-height: 90px; resize: vertical; }
+.field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A9882' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#loginErr { color: var(--danger); font-size: 13px; font-weight: 700; margin-top: 8px; text-align: center; }
+
+/* ── BOTÕES ────────────────────────────────────────────────── */
+.btn-primary {
+  width: 100%; min-height: 52px;
+  background: var(--accent); color: #062713;
+  border-radius: var(--radius-sm);
+  font-size: 16px; font-weight: 800;
+  letter-spacing: .3px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity .15s, transform .1s;
+  -webkit-appearance: none;
+}
+.btn-primary:active { opacity: .85; transform: scale(.98); }
+
+.btn-secondary {
+  min-height: 48px; padding: 0 18px;
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: opacity .15s;
+}
+.btn-secondary:active { opacity: .75; }
+
+.btn-danger {
+  min-height: 44px; padding: 0 14px;
+  background: rgba(239,68,68,.12); color: #fca5a5;
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-icon {
+  min-width: 44px; min-height: 44px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: opacity .15s;
+}
+.btn-icon:active { opacity: .7; }
+
+/* ── APP SHELL ─────────────────────────────────────────────── */
+#app {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bot);
+  padding-left: var(--safe-l);
+  padding-right: var(--safe-r);
+}
+
+/* ── TOP BAR ───────────────────────────────────────────────── */
+#top-bar {
+  flex-shrink: 0;
+  height: var(--top-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 12px;
+  position: relative;
+  z-index: 10;
+}
+#top-bar .brand { font-size: 17px; flex: 1; }
+.offline-badge {
+  background: var(--warn);
+  color: #000;
+  font-size: 10px; font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 99px;
+  letter-spacing: .5px;
+  display: none;
+}
+.offline-badge.show { display: block; }
+#top-bar-title { font-size: 17px; font-weight: 800; flex: 1; }
+
+/* ── PAGE CONTENT ──────────────────────────────────────────── */
+#page-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.page {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px calc(16px) 16px;
+  display: none;
+}
+.page.active { display: block; }
+
+/* ── BOTTOM NAV ────────────────────────────────────────────── */
+#bottom-nav {
+  flex-shrink: 0;
+  height: var(--nav-h);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.nav-btn {
+  min-height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .3px;
+  position: relative;
+  transition: color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-btn svg { width: 24px; height: 24px; }
+.nav-btn.active { color: var(--accent); }
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 3px 3px;
+}
+.nav-btn:active { opacity: .7; }
+
+/* ── CARDS ─────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-sm { padding: 12px 14px; }
+.section-label {
+  font-size: 11px; font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 20px 0 10px;
+}
+.section-label:first-child { margin-top: 4px; }
+
+/* ── MÉTRICAS ──────────────────────────────────────────────── */
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.metric-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.metric-value { font-size: 32px; font-weight: 900; margin: 4px 0 2px; line-height: 1; }
+.metric-sub { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.metric-value.ok { color: var(--ok); }
+.metric-value.warn { color: var(--warn); }
+.metric-value.bad { color: var(--danger); }
+
+/* ── BADGES ────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 99px; padding: 5px 10px;
+  font-size: 11px; font-weight: 800; letter-spacing: .3px;
+}
+.badge.ok  { background: rgba(34,197,94,.15); color: #4ade80; }
+.badge.warn{ background: rgba(245,158,11,.15); color: #fbbf24; }
+.badge.bad { background: rgba(239,68,68,.15); color: #f87171; }
+.badge.neutral { background: var(--surface2); color: var(--text-muted); }
+
+/* ── LIST ROWS ─────────────────────────────────────────────── */
+.list-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  min-height: 64px;
+}
+.list-row:active { background: var(--surface2); }
+.row-info { flex: 1; min-width: 0; }
+.row-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-meta { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+/* ── QUICK ACTIONS BAR ─────────────────────────────────────── */
+.quick-actions {
+  display: flex; gap: 10px; overflow-x: auto;
+  padding-bottom: 4px; margin-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.quick-actions::-webkit-scrollbar { display: none; }
+.qa-btn {
+  flex-shrink: 0;
+  min-height: 52px;
+  padding: 0 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  font-size: 13px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text);
+  white-space: nowrap;
+  transition: background .15s;
+}
+.qa-btn.primary { background: var(--accent); color: #062713; border-color: var(--accent); }
+.qa-btn:active { opacity: .8; }
+
+/* ── SEARCH BAR ────────────────────────────────────────────── */
+.search-bar {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  padding: 12px 18px 12px 44px;
+  color: var(--text);
+  font-size: 15px; font-weight: 600;
+  outline: none;
+  margin-bottom: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%237A9882' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 16px center;
+  -webkit-appearance: none;
+}
+.search-bar:focus { border-color: var(--accent); }
+
+/* ── PILOT CREDENTIAL CARD ─────────────────────────────────── */
+.credential-card {
+  background: linear-gradient(135deg, var(--surface2), var(--surface));
+  border: 2px solid var(--accent);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.credential-card::after {
+  content: '◈';
+  position: absolute; right: -8px; top: -10px;
+  font-size: 80px; color: var(--accent); opacity: .07;
+  font-weight: 900;
+}
+.cred-label { font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
+.cred-name { font-size: 20px; font-weight: 900; margin: 6px 0 4px; }
+.cred-meta { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.cred-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* ── FLEET CARD ────────────────────────────────────────────── */
+.fleet-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 12px;
+}
+.fleet-model { font-size: 20px; font-weight: 900; margin-bottom: 4px; }
+.fleet-serial {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin: 12px 0;
+}
+.fleet-serial-num { flex: 1; font-size: 13px; font-weight: 700; font-family: 'Courier New', monospace; color: var(--accent); }
+.fleet-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ── ARO TEXT ──────────────────────────────────────────────── */
+.aro-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-size: 12px; line-height: 1.7;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  max-height: 50vh; overflow-y: auto;
+}
+
+/* ── CHECKLIST ─────────────────────────────────────────────── */
+.check-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.check-item:last-child { border-bottom: 0; }
+.check-box {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  cursor: pointer;
+}
+.check-box.checked { background: var(--accent); border-color: var(--accent); }
+.check-box.checked::after { content: '✓'; color: #062713; font-weight: 900; font-size: 14px; }
+.check-text b { display: block; font-size: 14px; font-weight: 700; }
+.check-text small { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.progress-pill {
+  background: var(--surface2);
+  border-radius: 99px;
+  height: 8px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+
+/* ── MODAL SHEET ───────────────────────────────────────────── */
+.sheet-back {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+}
+.sheet-back.show { display: flex; }
+.sheet {
+  width: 100%;
+  max-height: 92vh;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  padding: 0 0 calc(20px + var(--safe-bot)) 0;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  animation: slideUp .3s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+.sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sheet-title { font-size: 18px; font-weight: 800; }
+.sheet-close {
+  width: 36px; height: 36px;
+  background: var(--surface2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--text-muted);
+}
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+}
+
+/* ── FULLSCREEN VIEWER ─────────────────────────────────────── */
+#doc-viewer {
+  position: fixed; inset: 0; z-index: 300;
+  background: #000;
+  display: flex; flex-direction: column;
+}
+#doc-viewer.hidden { display: none; }
+#doc-viewer .viewer-bar {
+  background: var(--surface);
+  padding: calc(var(--safe-top) + 12px) 16px 12px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+#doc-viewer .viewer-title { flex: 1; font-size: 15px; font-weight: 700; }
+#doc-viewer iframe, #doc-viewer img {
+  flex: 1;
+  width: 100%; border: 0;
+  object-fit: contain;
+}
+
+/* ── TOAST ─────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 16px + var(--safe-bot));
+  left: 50%; transform: translateX(-50%);
+  z-index: 400;
+  background: var(--text);
+  color: var(--bg);
+  padding: 12px 22px;
+  border-radius: 99px;
+  font-size: 14px; font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+  max-width: calc(100vw - 40px);
+}
+#toast.show { opacity: 1; }
+
+/* ── EMPTY STATE ───────────────────────────────────────────── */
+.empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 24px; gap: 12px;
+  color: var(--text-muted); text-align: center;
+}
+.empty-icon { font-size: 48px; opacity: .4; }
+.empty-msg { font-size: 15px; font-weight: 700; }
+.empty-sub { font-size: 13px; font-weight: 600; }
+
+/* ── OPERATION STATUS CARD ─────────────────────────────────── */
+.op-banner {
+  background: linear-gradient(135deg, #1a3825, #162118);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.op-banner-label { font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
+.op-banner-code { font-size: 20px; font-weight: 900; }
+.op-banner-meta { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+
+/* ── UPLOAD ZONE ───────────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent);
+  background: rgba(22,201,107,.05);
+}
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-label { font-size: 14px; font-weight: 700; color: var(--text-muted); }
+.upload-label b { color: var(--accent); }
+.upload-sub { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+.file-chosen { background: rgba(22,201,107,.1); border-color: var(--accent); }
+.file-name-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(22,201,107,.15);
+  color: var(--accent);
+  border-radius: 99px; padding: 6px 12px;
+  font-size: 12px; font-weight: 700;
+  margin-top: 8px;
+}
+
+/* ── PAGE HEADER ───────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.page-header h1 { font-size: 24px; font-weight: 900; }
+.page-header p { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+/* ── RESPONSIVE adjustments ────────────────────────────────── */
+@media (min-width: 600px) {
+  .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+  .sheet { max-width: 540px; margin: auto; border-radius: 24px; align-self: center; }
+  .sheet-back { align-items: center; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">WORK DRONES <span>GEO</span></div>
+  <div class="spinner"></div>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="hidden">
+  <div class="login-card">
+    <div class="brand">WORK DRONES <b>GEO</b></div>
+    <div class="brand-sub">Central de Operações</div>
+    <h1 class="login-title">Acesso</h1>
+    <p class="login-sub">Autentique para acessar o campo</p>
+    <div class="field">
+      <label>E-mail</label>
+      <input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <div id="loginErr" class="hidden" style="color:var(--danger);font-size:13px;font-weight:700;margin-top:10px;text-align:center"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+  <!-- TOP BAR -->
+  <div id="top-bar">
+    <div class="brand" style="font-size:15px">WORK DRONES <b>GEO</b></div>
+    <span class="offline-badge" id="offlineBadge">OFFLINE</span>
+    <button class="btn-icon" onclick="openSheet('sheet-more')" style="width:36px;height:36px;font-size:16px">☰</button>
+  </div>
+
+  <!-- PAGES -->
+  <div id="page-content">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="pg-dashboard" class="page active">
+      <div id="dash-op-banner"></div>
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-label">Operações</div><div id="mOps" class="metric-value">—</div><div class="metric-sub">ativas</div></div>
+        <div class="metric-card"><div class="metric-label">Documentos</div><div id="mDocs" class="metric-value">—</div><div class="metric-sub">no banco</div></div>
+        <div class="metric-card"><div class="metric-label">Pendências</div><div id="mAlerts" class="metric-value bad">—</div><div class="metric-sub">vencendo</div></div>
+        <div class="metric-card"><div class="metric-label">Aeronaves</div><div id="mFleet" class="metric-value">—</div><div class="metric-sub">frota</div></div>
+      </div>
+
+      <div class="section-label">Ações rápidas</div>
+      <div class="quick-actions">
+        <button class="qa-btn primary" onclick="openSheet('sheet-new-op')">＋ Nova operação</button>
+        <button class="qa-btn" onclick="goTab('documents'); openSheet('sheet-new-doc')">📎 Novo documento</button>
+        <button class="qa-btn" onclick="goTab('checklist')">☑ Checklist</button>
+        <button class="qa-btn" onclick="openSheet('sheet-aro')">⚠ Gerar ARO</button>
+      </div>
+
+      <div class="section-label">Prontidão documental</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:14px;font-weight:700">Status da documentação</span>
+          <span id="readPercent" style="font-size:18px;font-weight:900;color:var(--accent)">—</span>
+        </div>
+        <div class="progress-pill"><div class="progress-fill" id="readBar" style="width:0%"></div></div>
+      </div>
+
+      <div class="section-label">Próximos vencimentos</div>
+      <div id="dueList"></div>
+
+      <div class="section-label">Histórico recente</div>
+      <div id="histPreview"></div>
+    </div>
+
+    <!-- ── DOCUMENTOS ── -->
+    <div id="pg-documents" class="page">
+      <div class="page-header">
+        <div><h1>Documentos</h1><p>Banco de certificados e comprovantes</p></div>
+        <button class="btn-icon" onclick="openSheet('sheet-new-doc')">＋</button>
+      </div>
+
+      <div class="section-label">📋 Credenciais do Piloto</div>
+      <div id="pilotCredentials"></div>
+
+      <div class="section-label">Todos os documentos</div>
+      <input class="search-bar" id="docSearch" placeholder="Buscar documento…" oninput="renderDocs()" type="search">
+      <div id="docsListEl"></div>
+    </div>
+
+    <!-- ── AERONAVES ── -->
+    <div id="pg-fleet" class="page">
+      <div class="page-header">
+        <div><h1>Aeronaves</h1><p>Frota cadastrada</p></div>
+        <button class="btn-icon" onclick="openSheet('sheet-new-fleet')">＋</button>
+      </div>
+      <div id="fleetListEl"></div>
+    </div>
+
+    <!-- ── CHECKLIST ── -->
+    <div id="pg-checklist" class="page">
+      <div class="page-header">
+        <div><h1>Checklist</h1><p>Pré-voo operacional</p></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:700;font-size:14px">Progresso</span>
+          <span id="ckProgress" style="font-weight:900;color:var(--accent)">0/9</span>
+        </div>
+        <div class="progress-pill"><div class="progress-fill" id="ckBar" style="width:0%"></div></div>
+      </div>
+      <div class="card" id="checklistEl"></div>
+      <div style="margin-top:14px">
+        <button class="btn-primary" onclick="completeChecklist()">Concluir e registrar</button>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" onclick="goTab('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Início
+    </button>
+    <button class="nav-btn" onclick="goTab('documents')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+      Documentos
+    </button>
+    <button class="nav-btn" onclick="goTab('fleet')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Aeronaves
+    </button>
+    <button class="nav-btn" onclick="goTab('checklist')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Checklist
+    </button>
+  </nav>
+</div><!-- /app -->
+
+<!-- ── FULLSCREEN DOCUMENT VIEWER ── -->
+<div id="doc-viewer" class="hidden">
+  <div class="viewer-bar">
+    <button class="btn-icon" onclick="closeViewer()" style="background:var(--surface2)">✕</button>
+    <span class="viewer-title" id="viewerTitle">Documento</span>
+    <button class="btn-icon" id="viewerDownload" style="font-size:16px">⬇</button>
+  </div>
+  <iframe id="viewerFrame" title="Documento"></iframe>
+  <img id="viewerImg" style="display:none;width:100%;height:100%;object-fit:contain;flex:1" alt="Documento">
+</div>
+
+<!-- ── SHEETS ── -->
+
+<!-- Menu mais -->
+<div id="sheet-more" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Menu</span>
+      <button class="sheet-close" onclick="closeSheet('sheet-more')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <button class="list-row" style="width:100%;text-align:left" onclick="closeSheet('sheet-more');openSheet('sheet-aro')"><span style="font-size:20px">⚠</span><div class="row-info"><div class="row-title">ARO / Avaliação de Risco</div><div class="row-meta">Gerar documento de risco</div></div></button>
+      <button class="list-row" style="width:100%;text-align:left" onclick="closeSheet('sheet-more');openSheet('sheet-history')"><span style="font-size:20px">◷</span><div class="row-info"><div class="row-title">Histórico</div><div class="row-meta">Todas as ações registradas</div></div></button>
+      <button class="list-row" style="width:100%;text-align:left" onclick="closeSheet('sheet-more');openSheet('sheet-ops')"><span style="font-size:20px">⌁</span><div class="row-info"><div class="row-title">Operações</div><div class="row-meta">Gerenciar missões</div></div></button>
+      <button class="list-row" style="width:100%;text-align:left" onclick="closeSheet('sheet-more');openSheet('sheet-alerts')"><span style="font-size:20px">!</span><div class="row-info"><div class="row-title">Alertas</div><div class="row-meta">Vencimentos e pendências</div></div></button>
+      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+        <button class="btn-secondary" style="width:100%;justify-content:center;margin-bottom:10px" onclick="exportData()">⬇ Exportar backup JSON</button>
+        <button class="btn-danger" style="width:100%;justify-content:center" onclick="logout()">Sair da conta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Nova Operação -->
+<div id="sheet-new-op" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><span class="sheet-title">Nova Operação</span><button class="sheet-close" onclick="closeSheet('sheet-new-op')">✕</button></div>
+    <div class="sheet-body">
+      <div class="field"><label>Cliente</label><input id="fClient" type="text" autocomplete="organization"></div>
+      <div class="field-row">
+        <div class="field"><label>Data</label><input id="fDate" type="date"></div>
+        <div class="field"><label>Aeronave</label><select id="fDrone"></select></div>
+      </div>
+      <div class="field"><label>Local / Área</label><input id="fLocation" type="text"></div>
+      <div class="field-row">
+        <div class="field"><label>Altura (m AGL)</label><input id="fAlt" type="number" value="120"></div>
+        <div class="field"><label>Objetivo</label><input id="fObjective" type="text" value="Mapeamento"></div>
+      </div>
+      <div class="field"><label>Observações</label><textarea id="fNotes" placeholder="Condições do local, restrições…"></textarea></div>
+      <button class="btn-primary" onclick="createOp()">Criar operação</button>
+    </div>
+  </div>
+</div>
+
+<!-- Novo Documento -->
+<div id="sheet-new-doc" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><span class="sheet-title">Novo Documento</span><button class="sheet-close" onclick="closeSheet('sheet-new-doc')">✕</button></div>
+    <div class="sheet-body">
+      <div class="field"><label>Nome do documento</label><input id="dName" type="text" placeholder="Ex: Habilitação de piloto remoto"></div>
+      <div class="field-row">
+        <div class="field"><label>Categoria</label>
+          <select id="dCat"><option>Piloto</option><option>Aeronave</option><option>Espaço aéreo</option><option>Operação</option><option>Segurança / Risco</option><option>Cliente</option><option>Outros</option></select>
+        </div>
+        <div class="field"><label>Validade</label><input id="dDue" type="date"></div>
+      </div>
+      <div class="field">
+        <label>Arquivo (PDF ou foto)</label>
+        <div class="upload-zone" id="uploadZone">
+          <!-- accept="image/*" capture="environment" permite câmera direta no celular -->
+          <input type="file" id="dFileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,image/*" onchange="fileChosen(this)">
+          <div class="upload-icon">📎</div>
+          <div class="upload-label"><b>Toque aqui</b> para escolher</div>
+          <div class="upload-sub">PDF, foto ou câmera • até 50 MB</div>
+          <div id="fileNameTag"></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="createDoc()">Salvar documento</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nova Aeronave -->
+<div id="sheet-new-fleet" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><span class="sheet-title">Nova Aeronave</span><button class="sheet-close" onclick="closeSheet('sheet-new-fleet')">✕</button></div>
+    <div class="sheet-body">
+      <div class="field"><label>Modelo</label><input id="flName" type="text" placeholder="Ex: DJI Air 2S"></div>
+      <div class="field-row">
+        <div class="field"><label>Número de série</label><input id="flSerial" type="text"></div>
+        <div class="field"><label>Status</label>
+          <select id="flStatus"><option>Ativa</option><option>Manutenção</option><option>Inativa</option></select>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="createFleet()">Cadastrar aeronave</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARO -->
+<div id="sheet-aro" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><span class="sheet-title">ARO — Avaliação de Risco</span><button class="sheet-close" onclick="closeSheet('sheet-aro')">✕</button></div>
+    <div class="sheet-body">
+      <div class="field"><label>Selecionar operação</label><select id="aroOpSel" onchange="generateARO()"></select></div>
+      <div id="aroText" class="aro-box">Selecione uma operação acima.</div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <button class="btn-secondary" style="flex:1;justify-content:center" onclick="window.print()">🖨 Imprimir</button>
+        <button class="btn-secondary" style="flex:1;justify-content:center" onclick="closeSheet('sheet-aro')">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Operações -->
+<div id="sheet-ops" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><span class="sheet-title">Operações</span><button class="sheet-close" onclick="closeSheet('sheet-ops')">✕</button><button class="btn-icon" onclick="closeSheet('sheet-ops');openSheet('sheet-new-op')" style="font-size:18px">＋</button></div>
+    <div class="sheet-body">
+      <input class="search-bar" id="opSearch" placeholder="Buscar operação…" oninput="renderOpsSheet()" type="search">
+      <div id="opsListSheet"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Histórico -->
+<div id="sheet-history" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><span class="sheet-title">Histórico</span><button class="sheet-close" onclick="closeSheet('sheet-history')">✕</button></div>
+    <div class="sheet-body"><div id="histList"></div></div>
+  </div>
+</div>
+
+<!-- Alertas -->
+<div id="sheet-alerts" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><span class="sheet-title">Alertas</span><button class="sheet-close" onclick="closeSheet('sheet-alerts')">✕</button></div>
+    <div class="sheet-body"><div id="alertListEl"></div></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ============================================================
+  JAVASCRIPT
+============================================================ -->
+<script>
+'use strict';
+
+// ── SUPABASE ────────────────────────────────────────────────
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ───────────────────────────────────────────────────
+let ops = [], docs = [], fleet = [], hist = [];
+let currentUser = null;
+let pendingFile = null;
+const LS_KEY = 'wdg_cache_v1';
+
+// ── UTILS ───────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){ if(!d)return '—'; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; }
+function statusDue(d){
+  if(!d)return ['Sem validade','neutral'];
+  const days=Math.ceil((new Date(d)-new Date(today()))/86400000);
+  if(days<0)return ['Vencido','bad'];
+  if(days<=30)return ['Vence em '+days+'d','warn'];
+  return ['Válido','ok'];
+}
+
+// ── TOAST ───────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, ok=true){
+  const t=$('toast');
+  t.textContent=msg;
+  t.style.background = ok ? 'var(--accent)' : 'var(--danger)';
+  t.style.color = ok ? '#062713' : '#fff';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ── SPINNER ─────────────────────────────────────────────────
+function hideSplash(){ $('splash').style.opacity='0'; setTimeout(()=>$('splash').style.display='none',300); }
+
+// ── OFFLINE DETECTION ────────────────────────────────────────
+function updateOnlineStatus(){
+  const badge=$('offlineBadge');
+  if(navigator.onLine){ badge.classList.remove('show'); }
+  else { badge.classList.add('show'); toast('Modo offline — dados em cache','warn'); }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ── SHEETS ──────────────────────────────────────────────────
+function openSheet(id){
+  const el=$(id);
+  el.classList.add('show');
+  el.addEventListener('click', e=>{ if(e.target===el) closeSheet(id); }, {once:true});
+  if(id==='sheet-new-op') populateDroneSelect();
+  if(id==='sheet-aro') populateAROSelect();
+  if(id==='sheet-ops') renderOpsSheet();
+  if(id==='sheet-history') renderHistSheet();
+  if(id==='sheet-alerts') renderAlertsSheet();
+}
+function closeSheet(id){ $(id).classList.remove('show'); }
+
+// ── TABS ────────────────────────────────────────────────────
+const TABS = ['dashboard','documents','fleet','checklist'];
+function goTab(tab){
+  TABS.forEach(t=>{
+    $('pg-'+t).classList.toggle('active', t===tab);
+  });
+  document.querySelectorAll('#bottom-nav .nav-btn').forEach((btn,i)=>{
+    btn.classList.toggle('active', TABS[i]===tab);
+  });
+  renderAll();
+}
+
+// ── AUTH ────────────────────────────────────────────────────
+async function doLogin(){
+  const email=$('loginEmail').value.trim();
+  const pass=$('loginPass').value;
+  $('loginErr').classList.add('hidden');
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){
+    $('loginErr').textContent='E-mail ou senha inválidos.';
+    $('loginErr').classList.remove('hidden');
+    return;
+  }
+  currentUser=data.user;
+  await enterApp();
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  location.reload();
+}
+
+async function enterApp(){
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  await loadAll();
+  renderAll();
+}
+
+// ── LOAD DATA ────────────────────────────────────────────────
+async function loadAll(){
+  if(!currentUser) return;
+  const uid=currentUser.id;
+  try {
+    const [r1,r2,r3,r4]=await Promise.all([
+      sb.from('operations').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+      sb.from('documents').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+      sb.from('fleet').select('*').eq('user_id',uid).order('created_at'),
+      sb.from('history').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(50)
+    ]);
+    ops=r1.data||[];
+    docs=r2.data||[];
+    fleet=r3.data||[];
+    hist=r4.data||[];
+    // Salvar cache local
+    localStorage.setItem(LS_KEY,JSON.stringify({ops,docs,fleet,hist}));
+  } catch(e){
+    // Tentar cache local se offline
+    const cached=localStorage.getItem(LS_KEY);
+    if(cached){ const c=JSON.parse(cached); ops=c.ops||[]; docs=c.docs||[]; fleet=c.fleet||[]; hist=c.hist||[]; }
+    toast('Sem conexão — usando cache local', false);
+  }
+}
+
+function renderAll(){
+  renderDash(); renderDocs(); renderFleet(); renderChecklist();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDash(){
+  const active=ops.filter(o=>o.status!=='Concluída');
+  const alertCount=docs.filter(d=>!['ok','neutral'].includes(statusDue(d.due_date)[1])).length;
+  $('mOps').textContent=active.length;
+  $('mDocs').textContent=docs.length;
+  $('mAlerts').textContent=alertCount;
+  $('mAlerts').className='metric-value '+(alertCount>0?'bad':'ok');
+  $('mFleet').textContent=fleet.length;
+
+  // Operação ativa banner
+  const latestOp=active[0];
+  $('dash-op-banner').innerHTML = latestOp
+    ? `<div class="op-banner">
+        <div class="op-banner-label">⚡ Operação ativa</div>
+        <div class="op-banner-code">${esc(latestOp.code)}</div>
+        <div class="op-banner-meta">${esc(latestOp.client)} · ${fmtDate(latestOp.date)}</div>
+        <div style="margin-top:8px"><span class="badge warn">${esc(latestOp.status)}</span></div>
+      </div>` : '';
+
+  // Prontidão
+  const p=ops.length?Math.round(ops.reduce((a,o)=>a+(o.status==='Liberada'?100:o.status==='Em planejamento'?55:25),0)/ops.length):100;
+  $('readPercent').textContent=p+'%';
+  $('readBar').style.width=p+'%';
+
+  // Due list
+  const due=docs.filter(d=>statusDue(d.due_date)[1]!=='ok').slice(0,4);
+  $('dueList').innerHTML=due.length
+    ? due.map(d=>{const st=statusDue(d.due_date);return `<div class="list-row"><div class="row-info"><div class="row-title">${esc(d.name)}</div><div class="row-meta">${esc(d.category)} · ${fmtDate(d.due_date)}</div></div><span class="badge ${st[1]}">${st[0]}</span></div>`;}).join('')
+    : '<div class="list-row"><div class="row-info"><div class="row-title" style="color:var(--ok)">✓ Documentação em dia</div></div></div>';
+
+  // Hist preview
+  $('histPreview').innerHTML=hist.slice(0,3).map(h=>`<div class="list-row"><div class="row-info"><div class="row-title">${esc(h.text)}</div><div class="row-meta">${new Date(h.created_at).toLocaleString('pt-BR')}</div></div></div>`).join('')
+    || '<div class="empty"><div class="empty-icon">📋</div><div class="empty-msg">Nenhum registro ainda</div></div>';
+}
+
+// ── DOCUMENTOS ───────────────────────────────────────────────
+function renderDocs(){
+  // Credenciais do piloto
+  const pilot=docs.filter(d=>d.category==='Piloto');
+  $('pilotCredentials').innerHTML=pilot.length
+    ? pilot.map(d=>{
+        const st=statusDue(d.due_date);
+        return `<div class="credential-card">
+          <div class="cred-label">Credencial de Piloto</div>
+          <div class="cred-name">${esc(d.name)}</div>
+          <div class="cred-meta">Validade: ${fmtDate(d.due_date)}</div>
+          <div style="margin-top:8px"><span class="badge ${st[1]}">${st[0]}</span></div>
+          <div class="cred-actions">
+            ${d.file_path?`<button class="btn-secondary" style="font-size:13px" onclick="viewDoc('${d.id}')">👁 Apresentar</button>`:''}
+            ${d.file_path?`<button class="btn-secondary" style="font-size:13px" onclick="downloadDoc('${d.id}')">⬇ Baixar</button>`:''}
+            <label class="btn-secondary" style="font-size:13px;cursor:pointer">📎 Upload<input type="file" accept=".pdf,image/*" style="display:none" onchange="attachFile('${d.id}',this)"></label>
+            <button class="btn-danger" style="font-size:13px;padding:0 12px" onclick="deleteDoc('${d.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="list-row"><div class="row-info"><div class="row-title" style="color:var(--text-muted)">Nenhum documento de Piloto cadastrado</div><div class="row-meta">Adicione com a categoria "Piloto"</div></div></div>';
+
+  // Todos os docs
+  const q=($('docSearch')?.value||'').toLowerCase();
+  const all=docs.filter(d=>d.name.toLowerCase().includes(q)||d.category.toLowerCase().includes(q));
+  $('docsListEl').innerHTML=all.length
+    ? all.map(d=>{
+        const st=statusDue(d.due_date);
+        return `<div class="list-row">
+          <div class="row-info">
+            <div class="row-title">${esc(d.name)}</div>
+            <div class="row-meta">${esc(d.category)} · ${fmtDate(d.due_date)}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <span class="badge ${st[1]}">${st[0]}</span>
+            ${d.file_path
+              ? `<button class="btn-icon" style="font-size:16px;width:36px;height:36px" onclick="viewDoc('${d.id}')">👁</button>`
+              : `<label class="btn-icon" style="font-size:16px;width:36px;height:36px;cursor:pointer">📎<input type="file" accept=".pdf,image/*" style="display:none" onchange="attachFile('${d.id}',this)"></label>`
+            }
+            <button class="btn-icon" style="font-size:14px;width:36px;height:36px;color:var(--danger)" onclick="deleteDoc('${d.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="empty"><div class="empty-icon">📄</div><div class="empty-msg">Nenhum documento</div><div class="empty-sub">Toque em + para adicionar</div></div>';
+}
+
+// ── AERONAVES ─────────────────────────────────────────────────
+function renderFleet(){
+  $('fleetListEl').innerHTML=fleet.length
+    ? fleet.map(f=>`
+        <div class="fleet-card">
+          <div style="font-size:11px;font-weight:800;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase">◈ Aeronave</div>
+          <div class="fleet-model">${esc(f.name)}</div>
+          <div class="fleet-serial">
+            <span style="font-size:11px;color:var(--text-muted);font-weight:700">S/N</span>
+            <span class="fleet-serial-num">${esc(f.serial||'—')}</span>
+            <button class="btn-icon" style="width:36px;height:36px;font-size:15px;flex-shrink:0" onclick="copySerial('${esc(f.serial)}')">⎘</button>
+          </div>
+          <span class="badge ${f.status==='Ativa'?'ok':f.status==='Manutenção'?'warn':'neutral'}">● ${esc(f.status)}</span>
+          <div class="fleet-actions">
+            <button class="btn-danger" onclick="deleteFleet('${f.id}')">✕ Excluir</button>
+          </div>
+        </div>`).join('')
+    : '<div class="empty"><div class="empty-icon">✈️</div><div class="empty-msg">Nenhuma aeronave cadastrada</div><div class="empty-sub">Toque em + para adicionar</div></div>';
+}
+
+function copySerial(serial){
+  if(navigator.clipboard){ navigator.clipboard.writeText(serial).then(()=>toast('S/N copiado!')); }
+  else { const ta=document.createElement('textarea'); ta.value=serial; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('S/N copiado!'); }
+}
+
+// ── CHECKLIST ─────────────────────────────────────────────────
+const CHECKS=[
+  ['Documentação do piloto disponível','Confirmar documentos aplicáveis à operação.'],
+  ['Documentação da aeronave disponível','Confirmar cadastro e documentos aplicáveis.'],
+  ['Espaço aéreo / autorizações verificados','Verificar requisitos e autorizações do local.'],
+  ['ARO concluída','Riscos e mitigações registrados.'],
+  ['Condições meteorológicas verificadas','Compatíveis com a operação planejada.'],
+  ['Área e obstáculos avaliados','Edificações, árvores, linhas, pessoas.'],
+  ['Baterias e aeronave inspecionadas','Bateria, hélices, sensores, gimbal.'],
+  ['Plano de voo e emergência revisados','Procedimentos normais e de emergência.'],
+  ['Cliente / finalidade confirmados','Escopo e uso dos dados registrados.']
+];
+let ckState=new Array(CHECKS.length).fill(false);
+
+function renderChecklist(){
+  $('checklistEl').innerHTML=CHECKS.map((c,i)=>`
+    <div class="check-item">
+      <div class="check-box ${ckState[i]?'checked':''}" onclick="toggleCheck(${i})"></div>
+      <div class="check-text"><b>${c[0]}</b><small>${c[1]}</small></div>
+    </div>`).join('');
+  const done=ckState.filter(Boolean).length;
+  $('ckProgress').textContent=`${done}/${CHECKS.length}`;
+  $('ckBar').style.width=`${(done/CHECKS.length)*100}%`;
+}
+
+function toggleCheck(i){
+  ckState[i]=!ckState[i];
+  renderChecklist();
+}
+
+async function completeChecklist(){
+  const miss=ckState.filter(Boolean).length;
+  if(miss<CHECKS.length){ toast(`Ainda ${CHECKS.length-miss} itens pendentes.`,false); return; }
+  await addHistory('Checklist pré-voo concluído com todos os itens confirmados.');
+  ckState=new Array(CHECKS.length).fill(false);
+  renderChecklist();
+  toast('Checklist registrado!');
+}
+
+// ── OPERAÇÕES ─────────────────────────────────────────────────
+function populateDroneSelect(){
+  $('fDrone').innerHTML=fleet.map(f=>`<option>${esc(f.name)}</option>`).join('')||'<option>Sem aeronave</option>';
+  $('fDate').value=today();
+}
+
+async function createOp(){
+  const client=$('fClient').value.trim();
+  const loc=$('fLocation').value.trim();
+  const date=$('fDate').value;
+  if(!client||!loc||!date){toast('Preencha cliente, local e data.',false);return;}
+  const code='WDG-'+new Date().getFullYear()+'-'+String(ops.length+1).padStart(4,'0');
+  const{data,error}=await sb.from('operations').insert({
+    user_id:currentUser.id, code, client, location:loc, date,
+    drone:$('fDrone').value, altitude:$('fAlt').value,
+    objective:$('fObjective').value, notes:$('fNotes').value, status:'Em planejamento'
+  }).select().single();
+  if(!error){ops.unshift(data);await addHistory('Operação '+code+' criada');closeSheet('sheet-new-op');renderAll();toast('Operação criada!');}
+  else toast('Erro: '+error.message,false);
+}
+
+function renderOpsSheet(){
+  const q=($('opSearch')?.value||'').toLowerCase();
+  const rows=ops.filter(o=>(`${o.client} ${o.location} ${o.code}`).toLowerCase().includes(q));
+  $('opsListSheet').innerHTML=rows.length
+    ? rows.map(o=>`<div class="list-row" style="flex-wrap:wrap;gap:8px">
+        <div class="row-info">
+          <div class="row-title">${esc(o.code)} · ${esc(o.client)}</div>
+          <div class="row-meta">${esc(o.location)} · ${fmtDate(o.date)}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge ${o.status==='Liberada'?'ok':o.status==='Concluída'?'neutral':'warn'}">${esc(o.status)}</span>
+          <button class="btn-icon" style="width:36px;height:36px;font-size:13px;color:var(--danger)" onclick="deleteOp('${o.id}')">✕</button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty"><div class="empty-icon">⌁</div><div class="empty-msg">Nenhuma operação</div></div>';
+}
+
+async function deleteOp(id){
+  if(!confirm('Excluir esta operação?'))return;
+  const o=ops.find(x=>x.id===id);
+  await sb.from('operations').delete().eq('id',id);
+  ops=ops.filter(x=>x.id!==id);
+  await addHistory('Operação '+(o?.code||'')+' excluída');
+  renderOpsSheet(); renderDash(); toast('Operação excluída.');
+}
+
+// ── DOCUMENTOS: CRUD ──────────────────────────────────────────
+function fileChosen(input){
+  pendingFile=input.files[0];
+  if(!pendingFile)return;
+  const zone=$('uploadZone');
+  zone.classList.add('file-chosen');
+  $('fileNameTag').innerHTML=`<div class="file-name-tag">📄 ${esc(pendingFile.name)}</div>`;
+}
+
+async function createDoc(){
+  const name=$('dName').value.trim();
+  if(!name){toast('Informe o nome.',false);return;}
+  let filePath=null,fileName=null,fileType=null;
+  if(pendingFile){
+    const ext=pendingFile.name.split('.').pop();
+    filePath=`${currentUser.id}/${Date.now()}.${ext}`;
+    const{error:upErr}=await sb.storage.from('doc-files').upload(filePath,pendingFile,{contentType:pendingFile.type});
+    if(upErr){toast('Erro no upload: '+upErr.message,false);return;}
+    fileName=pendingFile.name; fileType=pendingFile.type;
+    pendingFile=null;
+  }
+  const{data,error}=await sb.from('documents').insert({
+    user_id:currentUser.id, name, category:$('dCat').value,
+    due_date:$('dDue').value||null, file_name:fileName, file_path:filePath, file_type:fileType
+  }).select().single();
+  if(!error){
+    docs.unshift(data);
+    await addHistory('Documento cadastrado: '+name);
+    closeSheet('sheet-new-doc');
+    $('dName').value=''; $('dDue').value='';
+    $('uploadZone').classList.remove('file-chosen');
+    $('fileNameTag').innerHTML='';
+    renderAll(); toast('Documento salvo!');
+  } else toast('Erro: '+error.message,false);
+}
+
+async function attachFile(docId,input){
+  const file=input.files[0]; if(!file)return;
+  const d=docs.find(x=>x.id===docId); if(!d)return;
+  const ext=file.name.split('.').pop();
+  const filePath=`${currentUser.id}/${Date.now()}.${ext}`;
+  const{error:upErr}=await sb.storage.from('doc-files').upload(filePath,file,{contentType:file.type});
+  if(upErr){toast('Erro no upload.',false);return;}
+  await sb.from('documents').update({file_path:filePath,file_name:file.name,file_type:file.type}).eq('id',docId);
+  d.file_path=filePath; d.file_name=file.name; d.file_type=file.type;
+  await addHistory('Arquivo anexado: '+d.name);
+  renderAll(); toast('Arquivo enviado!');
+}
+
+async function getSignedUrl(path){
+  const{data,error}=await sb.storage.from('doc-files').createSignedUrl(path,300);
+  if(error){toast('Erro ao gerar link.',false);return null;}
+  return data.signedUrl;
+}
+
+async function viewDoc(docId){
+  const d=docs.find(x=>x.id===docId);
+  if(!d?.file_path){toast('Sem arquivo.',false);return;}
+  const url=await getSignedUrl(d.file_path);
+  if(!url)return;
+  $('viewerTitle').textContent=d.name;
+  $('viewerDownload').onclick=()=>{ const a=document.createElement('a');a.href=url;a.download=d.file_name||d.name;a.click(); };
+  const isPdf=d.file_type==='application/pdf'||d.file_name?.endsWith('.pdf');
+  $('viewerFrame').style.display=isPdf?'block':'none';
+  $('viewerImg').style.display=isPdf?'none':'block';
+  if(isPdf){$('viewerFrame').src=url;}else{$('viewerImg').src=url;}
+  $('doc-viewer').classList.remove('hidden');
+}
+
+function closeViewer(){
+  $('doc-viewer').classList.add('hidden');
+  $('viewerFrame').src='about:blank';
+  $('viewerImg').src='';
+}
+
+async function downloadDoc(docId){
+  const d=docs.find(x=>x.id===docId);
+  if(!d?.file_path){toast('Sem arquivo.',false);return;}
+  const url=await getSignedUrl(d.file_path);
+  if(url){const a=document.createElement('a');a.href=url;a.download=d.file_name||d.name;a.click();}
+}
+
+async function deleteDoc(id){
+  if(!confirm('Excluir este documento?'))return;
+  const d=docs.find(x=>x.id===id);
+  if(d?.file_path) await sb.storage.from('doc-files').remove([d.file_path]);
+  await sb.from('documents').delete().eq('id',id);
+  docs=docs.filter(x=>x.id!==id);
+  await addHistory('Documento excluído: '+(d?.name||''));
+  renderAll(); toast('Documento excluído.');
+}
+
+// ── FROTA: CRUD ───────────────────────────────────────────────
+async function createFleet(){
+  const name=$('flName').value.trim();
+  if(!name){toast('Informe o modelo.',false);return;}
+  const{data,error}=await sb.from('fleet').insert({user_id:currentUser.id,name,serial:$('flSerial').value,status:$('flStatus').value}).select().single();
+  if(!error){fleet.push(data);await addHistory('Aeronave cadastrada: '+name);closeSheet('sheet-new-fleet');renderAll();toast('Aeronave cadastrada!');}
+  else toast('Erro: '+error.message,false);
+}
+
+async function deleteFleet(id){
+  if(!confirm('Excluir esta aeronave?'))return;
+  const f=fleet.find(x=>x.id===id);
+  await sb.from('fleet').delete().eq('id',id);
+  fleet=fleet.filter(x=>x.id!==id);
+  await addHistory('Aeronave excluída: '+(f?.name||''));
+  renderAll(); toast('Aeronave excluída.');
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────────────
+async function addHistory(text){
+  const{data}=await sb.from('history').insert({user_id:currentUser.id,text}).select().single();
+  if(data)hist.unshift(data);
+}
+
+function renderHistSheet(){
+  $('histList').innerHTML=hist.length
+    ? hist.map(h=>`<div class="list-row"><div class="row-info"><div class="row-title">${esc(h.text)}</div><div class="row-meta">${new Date(h.created_at).toLocaleString('pt-BR')}</div></div><span class="badge neutral">LOG</span></div>`).join('')
+    : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-msg">Nenhum registro</div></div>';
+}
+
+// ── ALERTAS ───────────────────────────────────────────────────
+function renderAlertsSheet(){
+  const arr=docs.filter(d=>['warn','bad'].includes(statusDue(d.due_date)[1]));
+  $('alertListEl').innerHTML=arr.length
+    ? arr.map(d=>{const st=statusDue(d.due_date);return `<div class="list-row"><div class="row-info"><div class="row-title">${esc(d.name)}</div><div class="row-meta">${esc(d.category)} · ${fmtDate(d.due_date)}</div></div><span class="badge ${st[1]}">${st[0]}</span></div>`;}).join('')
+    : '<div class="empty"><div class="empty-icon">✓</div><div class="empty-msg" style="color:var(--ok)">Sem alertas críticos</div><div class="empty-sub">Todos os documentos estão em dia</div></div>';
+}
+
+// ── ARO ───────────────────────────────────────────────────────
+function populateAROSelect(){
+  $('aroOpSel').innerHTML=ops.length
+    ? ops.map(o=>`<option value="${o.id}">${esc(o.code)} — ${esc(o.client)}</option>`).join('')
+    : '<option value="">Nenhuma operação cadastrada</option>';
+  generateARO();
+}
+
+function generateARO(){
+  const id=$('aroOpSel').value;
+  const o=ops.find(x=>x.id===id)||ops[0];
+  if(!o){$('aroText').textContent='Cadastre uma operação primeiro.';return;}
+  $('aroText').textContent=`WORK DRONES GEO — ARO
+${'='.repeat(56)}
+OPERAÇÃO: ${o.code}
+CLIENTE:  ${o.client}
+LOCAL:    ${o.location}
+DATA:     ${fmtDate(o.date)}
+AERONAVE: ${o.drone||'—'}
+ALTURA:   ${o.altitude} m AGL
+OBJETIVO: ${o.objective}
+
+1. PERIGOS AVALIADOS
+• Pessoas não envolvidas / terceiros
+• Obstáculos naturais e artificiais
+• Condições meteorológicas
+• Espaço aéreo e restrições locais
+• Perda de enlace / comunicação
+• Falha de bateria ou sistema
+• Terreno e características ambientais
+
+2. MITIGAÇÕES
+• Inspeção pré-voo completa
+• Verificação de baterias e sistemas
+• Avaliação do espaço aéreo aplicável
+• Condições meteorológicas verificadas
+• Procedimento de contingência pronto
+• Interrupção se condições inseguras
+
+3. CONDIÇÕES ESPECÍFICAS
+${o.notes||'Nenhuma observação adicional.'}
+
+4. DECISÃO
+Operação autorizada após conferência de todos
+os requisitos regulatórios e operacionais.
+
+Gerado: ${new Date().toLocaleString('pt-BR')}
+OBS.: Modelo — adapte conforme a regulamentação.`;
+}
+
+// ── EXPORT ────────────────────────────────────────────────────
+function exportData(){
+  const blob=new Blob([JSON.stringify({ops,docs:docs.map(d=>({...d,file_path:'[ref-storage]'})),fleet,hist},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='wdg_backup_'+today()+'.json'; a.click();
+}
+
+// ── PWA: SERVICE WORKER ───────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            toast('Atualização disponível — recarregue o app');
+          }
+        });
+      });
+    }).catch(e=>console.warn('[SW] Falha no registro:',e));
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+(async()=>{
+  // Pequeno delay para splash
+  await new Promise(r=>setTimeout(r,600));
+  hideSplash();
+  updateOnlineStatus();
+
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){
+    currentUser=session.user;
+    $('login').classList.add('hidden');
+    await enterApp();
+  } else {
+    $('login').classList.remove('hidden');
+  }
+
+  // Suporte a Enter no login
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!$('login').classList.contains('hidden')) doLogin();
+  });
+})();
+</script>
+</body>
+</html>
