@@ -1,0 +1,50 @@
+{
+  "name": "Work Drones Geo — Campo",
+  "short_name": "WDG Campo",
+  "description": "Central de Operações para Piloto Remoto de VANT — Work Drones Geo",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#101513",
+  "background_color": "#0D1512",
+  "lang": "pt-BR",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Novo Documento",
+      "short_name": "Documento",
+      "description": "Cadastrar novo documento",
+      "url": "./index.html#documents",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Checklist Pré-Voo",
+      "short_name": "Checklist",
+      "description": "Iniciar checklist pré-voo",
+      "url": "./index.html#checklist",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
