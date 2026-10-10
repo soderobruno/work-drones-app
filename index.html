@@ -865,9 +865,11 @@ a { color: inherit; text-decoration: none; }
     <div class="sheet-body">
       <div class="field"><label>Selecionar operação</label><select id="aroOpSel" onchange="generateARO()"></select></div>
       <div id="aroText" class="aro-box">Selecione uma operação acima.</div>
-      <div style="margin-top:14px;display:flex;gap:10px">
-        <button class="btn-secondary" style="flex:1;justify-content:center" onclick="window.print()">🖨 Imprimir</button>
-        <button class="btn-secondary" style="flex:1;justify-content:center" onclick="closeSheet('sheet-aro')">Fechar</button>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn-primary" style="min-height:48px" onclick="downloadARO()">⬇ Baixar .txt</button>
+        <button class="btn-secondary" style="justify-content:center" onclick="printARO()">🖨 Imprimir</button>
+        <button class="btn-secondary" style="justify-content:center" onclick="shareARO()">↗ Compartilhar</button>
+        <button class="btn-secondary" style="justify-content:center" onclick="closeSheet('sheet-aro')">Fechar</button>
       </div>
     </div>
   </div>
@@ -881,6 +883,20 @@ a { color: inherit; text-decoration: none; }
     <div class="sheet-body">
       <input class="search-bar" id="opSearch" placeholder="Buscar operação…" oninput="renderOpsSheet()" type="search">
       <div id="opsListSheet"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Detalhe da Operação -->
+<div id="sheet-op-detail" class="sheet-back">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title" id="opDetailCode">Operação</span>
+      <button class="sheet-close" onclick="closeSheet('sheet-op-detail')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div id="opDetailBody"></div>
     </div>
   </div>
 </div>
@@ -1212,16 +1228,95 @@ function renderOpsSheet(){
   const rows=ops.filter(o=>(`${o.client} ${o.location} ${o.code}`).toLowerCase().includes(q));
   $('opsListSheet').innerHTML=rows.length
     ? rows.map(o=>`<div class="list-row" style="flex-wrap:wrap;gap:8px">
-        <div class="row-info">
+        <div class="row-info" onclick="openOpDetail('${o.id}')" style="cursor:pointer;flex:1;min-width:0">
           <div class="row-title">${esc(o.code)} · ${esc(o.client)}</div>
           <div class="row-meta">${esc(o.location)} · ${fmtDate(o.date)}</div>
         </div>
-        <div style="display:flex;gap:6px;align-items:center">
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
           <span class="badge ${o.status==='Liberada'?'ok':o.status==='Concluída'?'neutral':'warn'}">${esc(o.status)}</span>
+          <button class="btn-secondary" style="min-height:40px;padding:0 12px;font-size:13px" onclick="openOpDetail('${o.id}')">Ver ›</button>
           <button class="btn-icon" style="width:36px;height:36px;font-size:13px;color:var(--danger)" onclick="deleteOp('${o.id}')">✕</button>
         </div>
       </div>`).join('')
     : '<div class="empty"><div class="empty-icon">⌁</div><div class="empty-msg">Nenhuma operação</div></div>';
+}
+
+function openOpDetail(id){
+  const o=ops.find(x=>x.id===id); if(!o) return;
+  $('opDetailCode').textContent=o.code;
+  $('opDetailBody').innerHTML=`
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-label" style="margin-top:0">Informações da missão</div>
+      <div class="list-row" style="margin-bottom:8px;border-radius:10px">
+        <div class="row-info"><div class="row-meta">Cliente</div><div class="row-title">${esc(o.client)}</div></div>
+      </div>
+      <div class="list-row" style="margin-bottom:8px;border-radius:10px">
+        <div class="row-info"><div class="row-meta">Local / Área</div><div class="row-title">${esc(o.location)}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="list-row" style="border-radius:10px">
+          <div class="row-info"><div class="row-meta">Data</div><div class="row-title">${fmtDate(o.date)}</div></div>
+        </div>
+        <div class="list-row" style="border-radius:10px">
+          <div class="row-info"><div class="row-meta">Aeronave</div><div class="row-title">${esc(o.drone||'—')}</div></div>
+        </div>
+        <div class="list-row" style="border-radius:10px">
+          <div class="row-info"><div class="row-meta">Altura</div><div class="row-title">${esc(o.altitude)} m AGL</div></div>
+        </div>
+        <div class="list-row" style="border-radius:10px">
+          <div class="row-info"><div class="row-meta">Objetivo</div><div class="row-title">${esc(o.objective||'—')}</div></div>
+        </div>
+      </div>
+      ${o.notes?`<div class="list-row" style="margin-top:8px;border-radius:10px"><div class="row-info"><div class="row-meta">Observações</div><div class="row-title" style="white-space:pre-wrap;font-size:13px">${esc(o.notes)}</div></div></div>`:''}
+    </div>
+
+    <div class="card">
+      <div class="section-label" style="margin-top:0">Atualizar operação</div>
+      <div class="field"><label>Status</label>
+        <select id="editOpStatus">
+          <option>Em planejamento</option>
+          <option>Documentação em análise</option>
+          <option>Liberada</option>
+          <option>Concluída</option>
+        </select>
+      </div>
+      <div class="field"><label>Notas / condições do local</label>
+        <textarea id="editOpNotes" placeholder="Observações, restrições, clima…">${esc(o.notes||'')}</textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn-primary" onclick="saveOpDetail('${o.id}')">Salvar</button>
+        <button class="btn-secondary" style="justify-content:center" onclick="useOpForARO('${o.id}')">⚠ Gerar ARO</button>
+      </div>
+    </div>`;
+
+  // Pré-selecionar status atual
+  document.getElementById('editOpStatus').value = o.status;
+  openSheet('sheet-op-detail');
+}
+
+async function saveOpDetail(id){
+  const status=document.getElementById('editOpStatus').value;
+  const notes=document.getElementById('editOpNotes').value;
+  const{error}=await sb.from('operations').update({status,notes}).eq('id',id);
+  if(!error){
+    const o=ops.find(x=>x.id===id);
+    o.status=status; o.notes=notes;
+    await addHistory('Operação '+(o?.code||'')+' atualizada → '+status);
+    closeSheet('sheet-op-detail');
+    renderOpsSheet(); renderDash();
+    toast('Operação salva!');
+  } else toast('Erro ao salvar.',false);
+}
+
+function useOpForARO(id){
+  closeSheet('sheet-op-detail');
+  closeSheet('sheet-ops');
+  openSheet('sheet-aro');
+  // Selecionar a operação no select da ARO após abrir
+  setTimeout(()=>{
+    const sel=$('aroOpSel');
+    if(sel){ sel.value=id; generateARO(); }
+  },200);
 }
 
 async function deleteOp(id){
@@ -1414,6 +1509,57 @@ OBS.: Modelo — adapte conforme a regulamentação.`;
 }
 
 // ── EXPORT ────────────────────────────────────────────────────
+function getAROText(){
+  return $('aroText')?.textContent || '';
+}
+
+function downloadARO(){
+  const text = getAROText();
+  if(!text || text==='Selecione uma operação acima.'){toast('Gere a ARO primeiro.',false);return;}
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ARO_WDG_' + today() + '.txt';
+  a.click();
+  toast('ARO baixada!');
+}
+
+function printARO(){
+  const text = getAROText();
+  if(!text || text==='Selecione uma operação acima.'){toast('Gere a ARO primeiro.',false);return;}
+  const win = window.open('', '_blank', 'width=800,height=600');
+  win.document.write(`<!doctype html><html><head><meta charset="utf-8">
+    <title>ARO — Work Drones Geo</title>
+    <style>
+      body{font-family:'Courier New',monospace;font-size:13px;line-height:1.7;padding:32px;color:#000;background:#fff}
+      pre{white-space:pre-wrap;word-break:break-word}
+      @media print{body{padding:16px}}
+    </style></head><body>
+    <pre>${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+    <script>window.onload=()=>{window.print();}<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
+async function shareARO(){
+  const text = getAROText();
+  if(!text || text==='Selecione uma operação acima.'){toast('Gere a ARO primeiro.',false);return;}
+  if(navigator.share){
+    try{
+      await navigator.share({title:'ARO — Work Drones Geo', text});
+      toast('ARO compartilhada!');
+    } catch(e){ if(e.name!=='AbortError') toast('Erro ao compartilhar.',false); }
+  } else {
+    // Fallback: copiar para clipboard
+    try{
+      await navigator.clipboard.writeText(text);
+      toast('ARO copiada para a área de transferência!');
+    } catch{
+      toast('Compartilhamento não disponível neste dispositivo.',false);
+    }
+  }
+}
+
 function exportData(){
   const blob=new Blob([JSON.stringify({ops,docs:docs.map(d=>({...d,file_path:'[ref-storage]'})),fleet,hist},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
