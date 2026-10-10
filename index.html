@@ -673,6 +673,12 @@ a { color: inherit; text-decoration: none; }
         <button class="qa-btn" onclick="openSheet('sheet-aro')">⚠ Gerar ARO</button>
       </div>
 
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Operações</span>
+        <button class="btn-secondary" style="padding:0 12px;min-height:32px;font-size:12px" onclick="openSheet('sheet-ops')">Ver todas</button>
+      </div>
+      <div id="dashOpsList"></div>
+
       <div class="section-label">Prontidão documental</div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -1066,15 +1072,39 @@ function renderDash(){
   $('mAlerts').className='metric-value '+(alertCount>0?'bad':'ok');
   $('mFleet').textContent=fleet.length;
 
-  // Operação ativa banner
+  // Banner operação ativa (clicável)
   const latestOp=active[0];
   $('dash-op-banner').innerHTML = latestOp
-    ? `<div class="op-banner">
-        <div class="op-banner-label">⚡ Operação ativa</div>
+    ? `<div class="op-banner" onclick="openOpDetail('${latestOp.id}')" style="cursor:pointer">
+        <div class="op-banner-label">⚡ Toque para abrir a operação ativa</div>
         <div class="op-banner-code">${esc(latestOp.code)}</div>
         <div class="op-banner-meta">${esc(latestOp.client)} · ${fmtDate(latestOp.date)}</div>
-        <div style="margin-top:8px"><span class="badge warn">${esc(latestOp.status)}</span></div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <span class="badge warn">${esc(latestOp.status)}</span>
+          <span style="font-size:12px;color:var(--accent);font-weight:700">Ver detalhes ›</span>
+        </div>
       </div>` : '';
+
+  // Lista de operações no dashboard
+  const dashOps = ops.slice(0, 5);
+  $('dashOpsList').innerHTML = dashOps.length
+    ? dashOps.map(o => `
+        <div class="list-row" onclick="openOpDetail('${o.id}')" style="cursor:pointer">
+          <div class="row-info">
+            <div class="row-title">${esc(o.code)} — ${esc(o.client)}</div>
+            <div class="row-meta">${esc(o.location)} · ${fmtDate(o.date)}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <span class="badge ${o.status==='Liberada'?'ok':o.status==='Concluída'?'neutral':'warn'}">${esc(o.status)}</span>
+            <span style="font-size:18px;color:var(--text-muted);font-weight:300">›</span>
+          </div>
+        </div>`).join('')
+    : `<div class="list-row" onclick="openSheet('sheet-new-op')" style="cursor:pointer">
+        <div class="row-info">
+          <div class="row-title" style="color:var(--accent)">＋ Criar primeira operação</div>
+          <div class="row-meta">Toque aqui para cadastrar uma missão</div>
+        </div>
+      </div>`;
 
   // Prontidão
   const p=ops.length?Math.round(ops.reduce((a,o)=>a+(o.status==='Liberada'?100:o.status==='Em planejamento'?55:25),0)/ops.length):100;
