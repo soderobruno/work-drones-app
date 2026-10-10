@@ -1,5 +1,5 @@
-// ── Work Drones Geo — Service Worker v1.4 ──────────────────
-const CACHE_NAME = 'wdg-cache-v1.4';
+// ── Work Drones Geo — Service Worker v1.5 ──────────────────
+const CACHE_NAME = 'wdg-cache-v1.5';
 
 const STATIC_ASSETS = [
   './index.html',
